@@ -1,70 +1,87 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/storage';
+import './ReportTable.css';
 
+const ReportTable = () => {
+  const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
-const ReportGenerator = ({ files }) => {
-  const [reports, setReports] = useState([]);
+  useEffect(() => {
+    fetchFiles();
+  }, [location.pathname]);
 
-  const generateReport = async () => {
-    const reportPromises = files.map(async (file) => {
-      const codeContent = await readFileContent(file);
-      const executionResult = await executeCode(codeContent);
-      return { fileName: file.name, codeContent, executionResult };
-    });
-
-    const generatedReports = await Promise.all(reportPromises);
-    setReports(generatedReports);
-  };
-
-  const readFileContent = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (event) => resolve(event.target.result);
-      reader.onerror = (event) => reject(event.target.error);
-      reader.readAsText(file);
-    });
-  };
-
-  const executeCode = async (codeContent) => {
+  const fetchFiles = async () => {
     try {
-      const response = await axios.post('https://api.piston.rs/execute', {
-        code: codeContent,
-        language: 'python',
-      });
-      const executionResult = response.data;
-      return executionResult;
+      const storageRef = firebase.storage().ref();
+      const filesRef = storageRef.child('uploads');
+
+      const fileList = await filesRef.listAll();
+
+      const filesData = [];
+
+      for (const fileRef of fileList.items) {
+        const fileMetadata = await fileRef.getMetadata();
+        filesData.push({
+          name: fileMetadata.name,
+          url: await fileRef.getDownloadURL(),
+          ref: fileRef,
+        });
+      }
+
+      setFiles(filesData);
+      setLoading(false);
     } catch (error) {
-      console.error('Code execution failed:', error);
-      return { error: 'Code execution failed' };
+      console.error('Failed to fetch files:', error);
+    }
+  };
+
+  const deleteFile = async (fileRef) => {
+    try {
+      await fileRef.delete();
+      setFiles((prevFiles) => prevFiles.filter((file) => file.ref !== fileRef));
+    } catch (error) {
+      console.error('Failed to delete file:', error);
     }
   };
 
   return (
-    <div>
-      <button onClick={generateReport}>Generate Report</button>
-      
-        <table>
+    <div className="table-container">
+      <h1>All Uploaded Files</h1>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <table className="report-table">
           <thead>
             <tr>
               <th>File Name</th>
-              <th>Code Content</th>
-              <th>Execution Result</th>
+              <th>Download</th>
+              <th>Delete</th>
             </tr>
           </thead>
           <tbody>
-            {reports.map((report, index) => (
+            {files.map((file, index) => (
               <tr key={index}>
-                <td>{report.fileName}</td>
-                <td>{report.codeContent}</td>
-                <td>{report.executionResult}</td>
+                <td>{file.name}</td>
+                <td>
+                  <button>
+                    <a href={file.url} download style={{ color: 'white', textDecoration: 'none' }}>
+                      Download
+                    </a>
+                  </button>
+                </td>
+                <td>
+                  <button onClick={() => deleteFile(file.ref)}>Delete</button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
-    
+      )}
+    </div>
   );
 };
 
-
-export default ReportGenerator;
+export default ReportTable;

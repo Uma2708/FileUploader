@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { storage } from '../firebase';
-import ReportTable from './ReportTable';
+// import ReportTable from './ReportTable';
+import './UploadForm.css'
 
 const UploadForm = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -36,18 +37,45 @@ const UploadForm = () => {
       },
       () => {
         setUploadSuccess(true);
+        setTimeout(() => {
+          setUploadProgress(0);
+        }, 2000); 
       }
+      
     );
   };
 
+  useEffect(() => {
+    let timeout;
+    if (uploadError || uploadSuccess) {
+      timeout = setTimeout(() => {
+        setUploadError(null);
+        setUploadSuccess(false);
+      }, 2000);
+    }
+    return () => clearTimeout(timeout);
+  }, [uploadError, uploadSuccess]);
+
   return (
-    <div className="uploader-container" >
+<div className='upload'>
+<h1 style={{color:'grey', margin:'20px'}}>Upload File</h1>
+    <div className='upload-container' >
+    
       <input type="file" onChange={handleFileChange} />
-      <button onClick={handleFileUpload}>Upload File</button>
-      {uploadProgress > 0 && <p>Upload Progress: {uploadProgress}%</p>}
-      {uploadError && <p>Error Uploading File: {uploadError}</p>}
-      {uploadSuccess && <p>File Uploaded Successfully!</p>}
-      <ReportTable/>
+
+      
+      <button onClick={handleFileUpload}>Upload</button>
+      {uploadProgress > 0 && (
+  <div>
+    <p> <progress value={uploadProgress} max="100" /> {uploadProgress}%</p>
+    
+  </div>
+)}
+{uploadError && <p>Error Uploading File: {uploadError}</p>}
+{uploadSuccess && <p>File Uploaded Successfully!</p>}
+      </div>
+      {/* <ReportTable/> */}
+      
     </div>
   );
 };

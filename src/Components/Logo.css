@@ -1,5 +1,4 @@
 .logo-container {
-    
     display: flex;
     align-items: center;
     background-color: grey;
@@ -16,6 +15,32 @@
   .logo-text {
     font-size: 18px;
     font-weight: bolder;
-   color: white;
+    color: white;
+  }
+  
+  .logo-p1 {
+    font-size: 18px;
+    font-weight: lighter;
+    color: white;
+    margin-left: 80px;
+    text-decoration: none;
+  }
+  
+  .logo-p2 {
+    font-size: 18px;
+    font-weight: lighter;
+    color: white;
+    margin-left: 30px;
+    text-decoration: none;
+  }
+  
+  @media (max-width: 768px) {
+    .logo-p1 {
+      margin-left: 10px;
+    }
+  
+    .logo-p2 {
+      margin-left: 10px;
+    }
   }
   

@@ -1,5 +1,6 @@
 // App.js
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Logo from './Components/Logo';
 import UploadForm from './Components/UploadForm';
 import ReportGenerator from './Components/ReportGenerator';
@@ -12,13 +13,18 @@ const App = () => {
     setUploadedFiles(files);
   };
 
+
   return (
+    <Router>
     <div>
       <Logo />
-      <UploadForm onFileUpload={handleFileUpload} />
-      {uploadedFiles.length > 0 && <ReportGenerator files={uploadedFiles} />}
-      {uploadedFiles.length > 0 && <ReportTable files={uploadedFiles} />}
+      <Routes>
+        <Route path="/" element={<UploadForm onFileUpload={handleFileUpload} />} />
+        <Route path="/uploads" element={<ReportTable files={uploadedFiles} />} />
+        <Route path="/report" element={<ReportGenerator files={uploadedFiles} />} />
+      </Routes>
     </div>
+  </Router>
   );
 };
 
